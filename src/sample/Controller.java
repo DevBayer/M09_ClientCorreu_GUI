@@ -4,9 +4,13 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Task;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
+import javafx.scene.text.Text;
 import javafx.util.Callback;
 
 import javax.mail.Folder;
@@ -24,6 +28,12 @@ public class Controller {
     TableView twMessages;
 
     @FXML
+    Text txtToolbar;
+
+    @FXML
+    ProgressBar progressbar;
+
+    @FXML
     public void initialize() throws MessagingException{
         System.out.println("initialized Controller");
         dialogLogin();
@@ -34,17 +44,50 @@ public class Controller {
         setTableMessages(0);
     }
 
-    private void setTableMessages(int i) throws MessagingException {
-        ObservableList<Message> data = FXCollections.observableArrayList();
-        Folder folder = manager.getFolder(i);
-        for (javax.mail.Message m : folder.getMessages()) {
-            Message message = new Message();
-            message.setFrom(m.getFrom()[0].toString());
-            message.setSubject(m.getSubject());
-            message.setDate(m.getSentDate().toString());
-        }
-        twMessages.setItems(data);
-        twMessages.refresh();
+    @FXML
+    private void setTableMessages(int i) throws MessagingException, IllegalStateException {
+        final ObservableList<Message> data = FXCollections.observableArrayList();
+        // In real life this task would do something useful and return
+        // some meaningful result:
+        //ProgressForm pForm = new ProgressForm();
+        txtToolbar.setText("Obteniendo mensajes...");
+        //pForm.getDialogStage().show();
+        Task<Void> task = new Task<Void>() {
+            @Override
+            public Void call() throws InterruptedException {
+                    try {
+                    Folder folder = manager.getFolder(i);
+                    folder.open(Folder.READ_ONLY);
+                        int count = 0;
+                    for (javax.mail.Message m : folder.getMessages()) {
+                        Message message = new Message();
+                        message.setFrom(m.getFrom()[0].toString());
+                        message.setSubject(m.getSubject());
+                        message.setDate(m.getSentDate());
+                        message.setContent(m.getContent());
+                        message.setContenttype(m.getContentType());
+                        data.add(message);
+                        updateProgress(10, 10);
+                        twMessages.getItems().add(message);
+                        twMessages.refresh();
+                        count++;
+                        txtToolbar.setText("Recibiendo: "+count+"/"+folder.getMessages().length);
+                        progressbar.setProgress((count*1)/folder.getMessages().length);
+                    }
+                    folder.close(true);
+                        /*
+                        Platform.runLater(() -> {
+                            pForm.getDialogStage().close();
+                        });*/
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                return null ;
+            }
+        };
+        Thread thread = new Thread(task);
+        thread.start();
     }
 
     @FXML
@@ -53,7 +96,9 @@ public class Controller {
         ObservableList<String> items = FXCollections.observableArrayList ();
         for (int i = 0; i < folders.length; i++) {
             Folder x = folders[i];
+            x.open(Folder.READ_ONLY);
             items.add(x.getName()+" ("+x.getMessageCount()+")");
+            x.close(true);
         }
         lvFolders.setItems(items);
         lvFolders.refresh();
@@ -82,6 +127,21 @@ public class Controller {
                 return new SimpleStringProperty(""+p.getValue().getDate());
             }
         });
+
+
+        twMessages.setOnMousePressed(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                if(event.isPrimaryButtonDown() && event.getClickCount() == 2){
+                    Message message = (Message) twMessages.getSelectionModel().getSelectedItem();
+                    if(message != null) {
+                        MessageForm fMessage = new MessageForm(message);
+                        fMessage.getDialogStage().show();
+                    }
+                }
+            }
+        });
+
     }
 
     private void dialogLogin(){

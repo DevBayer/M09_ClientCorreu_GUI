@@ -23,7 +23,7 @@ public class MailManager {
     }
 
     public Folder[] getFolders() throws MessagingException{
-        return store.getPersonalNamespaces();
+        return store.getDefaultFolder().list();
     }
 
     public Folder getFolder(int i) throws MessagingException {
