@@ -77,7 +77,7 @@ public class Message {
         String result = "";
         if (contenttype.equals("text/plain")) {
             result = content.toString();
-        } else if (contenttype.equals("multipart/*")) {
+        } else if (contenttype.startsWith("multipart/")) {
             MimeMultipart mimeMultipart = (MimeMultipart) content;
             result = getTextFromMimeMultipart(mimeMultipart);
         }

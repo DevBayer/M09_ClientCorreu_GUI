@@ -11,11 +11,11 @@ public class MailManager {
     private Store store;
 
 
-    public void main(String host, String user, String pass) throws NoSuchProviderException, MessagingException {
+    public void main(String host, int port, boolean tls, String user, String pass) throws NoSuchProviderException, MessagingException {
         Properties properties = new Properties();
         properties.put("mail.pop3.host", host);
-        properties.put("mail.pop3.port", "995");
-        properties.put("mail.pop3.starttls.enable", "true");
+        properties.put("mail.pop3.port", port);
+        properties.put("mail.pop3.starttls.enable", tls ? "true" : "false");
         emailSession = Session.getDefaultInstance(properties);
         store = emailSession.getStore("pop3s");
         store.connect(host, user, pass);
@@ -23,7 +23,7 @@ public class MailManager {
     }
 
     public Folder[] getFolders() throws MessagingException{
-        return store.getDefaultFolder().list();
+        return store.getDefaultFolder().list("*");
     }
 
     public Folder getFolder(int i) throws MessagingException {
