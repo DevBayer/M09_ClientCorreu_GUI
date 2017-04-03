@@ -19,7 +19,6 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.HBoxBuilder;
 import javafx.scene.text.Text;
-import javafx.stage.Stage;
 import javafx.util.Callback;
 
 import javax.mail.Folder;
@@ -52,7 +51,7 @@ public class Controller {
         System.out.println("initialized Controller");
         dialogLogin();
         manager = new MailManager();
-        manager.main(user.getHost(), user.getPort(), user.isTls(), user.getEmail(), user.getPassword());
+        manager.main(user.getPop_host(), user.getPop_port(), user.getSmtp_host(), user.getSmtp_port(), user.isTls(), user.getEmail(), user.getPassword());
         init();
         initTable();
         setTableMessages(0);
@@ -87,7 +86,7 @@ public class Controller {
                         twMessages.refresh();
                         count++;
                         txtToolbar.setText("Recibiendo: "+count+"/"+folder.getMessages().length);
-                        progressbar.setProgress((count*1)/folder.getMessages().length);
+                        progressbar.setProgress((count*1.1)/folder.getMessages().length);
                     }
                     folder.close(true);
                         /*
@@ -182,18 +181,29 @@ public class Controller {
         tp.setText("Custom Settings");
         GridPane grid2 = new GridPane();
 
-        Label label4 = new Label("POP3: ");
+
+        Label label4 = new Label("SMTP: ");
         grid2.add(label4, 1, 1);
         TextField textSMTP = new TextField();
         grid2.add(textSMTP, 1, 2);
         Label label5 = new Label("PORT: ");
         grid2.add(label5, 3, 1);
-        TextField textPORT = new TextField();
-        grid2.add(textPORT, 3, 2);
-        CheckBox cb2 = new CheckBox("Start TLS");
-        grid2.add(cb2, 1, 3);
-        tp.setContent(grid2);
+        TextField textPORTSMTP = new TextField();
+        grid2.add(textPORTSMTP, 3, 2);
 
+        Label label6 = new Label("POP: ");
+        grid2.add(label6, 1, 3);
+        TextField textPOP = new TextField();
+        grid2.add(textPOP, 1, 4);
+
+        Label label7 = new Label("PORT: ");
+        grid2.add(label7, 3, 3);
+        TextField textPORTPOP = new TextField();
+        grid2.add(textPORTPOP, 3, 4);
+
+        CheckBox cb2 = new CheckBox("Start TLS");
+        grid2.add(cb2, 1, 5);
+        tp.setContent(grid2);
         GridPane grid = new GridPane();
         grid.setHgap(10);
         grid.setVgap(10);
@@ -266,11 +276,11 @@ public class Controller {
 
                 if (b == buttonTypeOk) {
                     if(rb1.isSelected()) {
-                        return new User(text1.getText(), text2.getText(), "pop.gmail.com", 995, true);
+                        return new User(text1.getText(), text2.getText(), "pop.gmail.com", 995, "smtp.gmail.com", 587, true);
                     }else if(rb2.isSelected()){
-                        return new User(text1.getText(), text2.getText(), "pop-mail.outlook.com", 995, true);
+                        return new User(text1.getText(), text2.getText(), "pop-mail.outlook.com", 995, "smtp-mail.outlook.com", 587, true);
                     }else if(rb3.isSelected()){
-                        return new User(text1.getText(), text2.getText(), textSMTP.getText(), Integer.parseInt(textPORT.getText()), cb2.isSelected());
+                        return new User(text1.getText(), text2.getText(), textPOP.getText(), Integer.parseInt(textPORTPOP.getText()), textSMTP.getText(), Integer.parseInt(textPORTSMTP.getText()), cb2.isSelected());
                     }
                 }
 
@@ -285,6 +295,12 @@ public class Controller {
         }else{
             System.exit(0);
         }
+    }
+
+    @FXML
+    public void showCompose(){
+        ComposeForm fCompose = new ComposeForm(manager);
+        fCompose.getDialogStage().show();
     }
 
     private boolean isValid(String mail){

@@ -14,7 +14,7 @@
       <ToolBar prefHeight="40.0" prefWidth="200.0" BorderPane.alignment="CENTER">
         <items>
           <Button mnemonicParsing="false" text="Inbox" />
-            <Button mnemonicParsing="false" text="Redact" />
+            <Button mnemonicParsing="false" onAction="#showCompose" text="Compose" />
         </items>
       </ToolBar>
    </top>
